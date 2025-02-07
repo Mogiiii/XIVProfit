@@ -9,7 +9,7 @@ use crate::cache::InMemoryCache;
 #[derive(Clone, Serialize)]
 pub(crate) struct ItemListing {
     item_id: usize,
-    world_id: usize, 
+    world_id: usize,
     pub(crate) price_per_unit: f32,
     pub(crate) quantity: usize,
     pub(crate) total_price: usize,
@@ -63,8 +63,8 @@ impl UniversalisMbCurrent {
         let mut v = Vec::new();
         for l in self.listings {
             let id = match self.worldID {
-                None => {l.worldID.unwrap()}
-                Some(i) => i
+                None => l.worldID.unwrap(),
+                Some(i) => i,
             };
 
             v.push(ItemListing {
@@ -118,7 +118,6 @@ pub(crate) async fn get_item_listings(
     }
 }
 
-//backtracking search to find the hopefully cheapest way to buy the amount
 pub(crate) async fn get_cheapest_combination(
     item_id: usize,
     world: &String,
@@ -137,28 +136,29 @@ pub(crate) async fn get_cheapest_combination(
     }
 
     impl CombinationIterator {
-        fn from(v: Vec<ItemListing>) -> Self {
+        fn from(listings: Vec<ItemListing>) -> Self {
             Self {
-                data: v.clone(),
+                data: listings.clone(),
                 index: 0,
                 size: 1,
-                max_size: v.len() - 1,
+                max_size: listings.len() - 1,
             }
         }
     }
 
     impl Iterator for CombinationIterator {
         fn next(&mut self) -> Option<Vec<ItemListing>> {
-            if self.size == self.max_size {
-                return None;
-            }
-            if self.index == self.max_size {
+            if self.index > self.max_size {
                 self.size = self.size + 1;
                 self.index = self.size;
             }
+            if self.size > self.max_size {
+                return None;
+            }
             let mut i: usize = 0;
             let mut r = Vec::new();
-            while i < self.size - 1 {
+
+            while i < self.size && i != self.index {
                 r.push(self.data[i].clone());
                 i = i + 1;
             }
@@ -194,7 +194,7 @@ pub(crate) async fn get_cheapest_combination(
     if cheapest.is_some() {
         cheapest.unwrap()
     } else {
-        listings
+        Vec::new()
     }
 }
 
